@@ -1,0 +1,23 @@
+#type   menu/item       operation/parent   label                                          command/menu                activation           install?
+
+item    importMenu      command            "from SAS data set..."                         importSAS                    ""                  "packageAvailable('Hmisc')"
+
+menu    EHESMenu        topMenu            ""                                              ""                          ""                  ""
+menu	SamplingMenu	EHESMenu	   ""                                              ""                          ""                  ""	
+menu    CheckMenu       EHESMenu           ""                                              ""                          ""                  ""
+menu    AnalysisMenu    EHESMenu           ""                                              ""                          ""                  ""
+
+item    topMenu         cascade            "EHES"                                          EHESMenu                    ""                  ""
+
+item    SamplingMenu    command            "Sample Sizes..."                               OpenSampleSizes             ""       ""
+item    SamplingMenu    command            "Sampling Stage 1..."                           OpenSampling1               ""       ""
+item    SamplingMenu    command            "Sampling Stage 2..."                           OpenSampling2               ""       ""
+item    EHESMenu        cascade            "Sampling"                                      SamplingMenu                ""                  ""
+
+item    CheckMenu       command            "Add control digit..."                          ControlDigit                ""       ""
+item    CheckMenu       command            "Create encoded numbers..."                     CreateDigits                ""                  ""
+item    CheckMenu       command            "Check encoded numbers..."                      Check                       ""       ""
+item    EHESMenu        cascade            "Check Digits"                                  CheckMenu                   ""                  ""
+
+item    AnalysisMenu    command            "Calculate Weights"                         	   OpenWeights                 "FALSE"             ""
+item    EHESMenu        cascade            "Analysis"                                      AnalysisMenu                ""                  ""
