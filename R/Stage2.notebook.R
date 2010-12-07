@@ -566,7 +566,7 @@ onOK<-function(){
 #Add in Report		
 		if (reportyesno==1) {
 			df1names<-names(get(stage2df))
-			cat("Documentation for EHES sampling - Stage 2 Sampling\n\nDate:",date(),"\nR Version:", paste(getRversion()),"\nRcmdr Version:", packageDescription("Rcmdr")$Version,"\nEHESsampling Version: 2.0\nWorking Directory:", getwd(),
+			cat("Documentation for EHES sampling - Stage 2 Sampling\n\nDate:",date(),"\nR Version:", paste(getRversion()),"\nRcmdr Version:", packageDescription("Rcmdr")$Version,"\nRcmdrPlugin.EHESsampling Version: ", packageDescription("RcmdrPlugin.EHESsampling")$Version, "\nWorking Directory:", getwd(),
 			"\n\nDatasets...\nThe main dataset containing Unit per LINE and Sample Sizes was called:", stage2df,
 			"\n\nVariable Details...\nThe Primary Sampling Unit variable was:", df1names[PSUnew],
 			"\nThe Stratification variable was:", df1names[stratanew], 

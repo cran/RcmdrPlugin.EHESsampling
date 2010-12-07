@@ -6,10 +6,12 @@ Stage1.notebook<-function() {
 	tkpack(nb, fill="both", expand=2)
 	tkconfigure(nb, width=450)
 	tkgrid(nb,columnsp=2)
-
+	
 	buttons.frame<-tkframe(top)
 	next.bn<-tk2button(buttons.frame, text="Next >>>",command=function()sampling1.run())
+	tkgrid(next.bn)
 	tkgrid(buttons.frame, sticky="e", columnspan=2)
+
 
 ### DATASET SELECTION
 	stage1<-tk2notetab(nb, "Stage 1 Sampling")
@@ -235,7 +237,7 @@ sampling1.run<-function(){
 		closeDialog()
 		if (reportyesno==1) {
 			df1names<-names(get(stage1df))
-			cat("Documentation for EHES sampling - Stage 1 Sampling\n\nDate:",date(),"\nR Version:", paste(getRversion()),"\nRcmdr Version:", packageDescription("Rcmdr")$Version,"\nEHESsampling Version: 2.0\nWorking Directory:", getwd(),
+			cat("Documentation for EHES sampling - Stage 1 Sampling\n\nDate:",date(),"\nR Version:", paste(getRversion()),"\nRcmdrPlugin.EHESsampling Version:", packageDescription("RcmdrPlugin.EHESsampling")$Version,"\nEHESsampling Version: 2.0\nWorking Directory:", getwd(),
 			"\n\nDatasets...\nThe dataset containing Primary Sampling Units and Sample Sizes was called:", stage1df,
 			"\n\nVariable Details...\nThe Primary Sampling Unit variable was:", df1names[PSU],
 			"\nThe stratitification variable was:", df1names[strata],

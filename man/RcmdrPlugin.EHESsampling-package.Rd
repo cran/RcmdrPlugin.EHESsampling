@@ -6,7 +6,7 @@
 \details{\tabular{ll}{
 Package: \tab RcmdrPlugin.EHESsampling\cr
 Type: \tab Package\cr
-Version: \tab 1.0\cr
+Version: \tab 1.1\cr
 Date: \tab 2010-07-14\cr
 License: \tab GPL (>= 2)\cr
 LazyLoad: \tab yes\cr}

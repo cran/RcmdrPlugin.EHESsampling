@@ -1,6 +1,6 @@
 SampleSizes<-function(df1, df2, PSU1, strata1, size1, demo1,  demoyesno, stratayesno, strata2, size2, 
 		calcsizevalue, mkvalue, mkvar, ssyesno, ssvar, sstotal, ppstype, nminimum, 
-		nfixed, Parcost, PSUcost, Vwithin, Vamong, PSUV, PSUmean, optyesno, costyesno)
+		nfixed, Parcost, PSUcost, PSUV, PSUmean, optyesno, costyesno)
 	{
 
 	x<-df1
@@ -36,9 +36,23 @@ SampleSizes<-function(df1, df2, PSU1, strata1, size1, demo1,  demoyesno, stratay
 				z$size<-strata.size
 				size2<-match("size", names(z))
 				}
+#add in proportional weight
+	z$ww<-z[,size2]/sum(z[,size2])
+
+#add in weighted mean of variable - at the moment only using this with optimal sampling and no demographics
+if (optyesno==0 & demoyesno==1){
+	mean.Var<-NULL
+	for (i in 1:max(x$strata.id)){
+		temp<-subset(x, strata.id==i)
+		a<-weighted.mean(temp[,PSUmean], w=temp[,size1])
+		mean.Var<-c(mean.Var, a)
+	}
+	z$mean.Var<-mean.Var
+	T.Var<<-weighted.mean(x[,PSUmean], w=x[,size1])
+	}
 
 #Add in Vwithin and Vamong
-if (optyesno=="0"){
+if (optyesno==0){
 	temp<-data.frame(xtabs(x[,size1]~x[,strata1]))
 	names(temp)<-c("strata","size")
 	Nk<-temp$size[x$strata.id]
@@ -51,8 +65,8 @@ if (optyesno=="0"){
 	Vwithin<-match("Vwithin",names(z))
 
 	##Calculating Vamong
-	x$Vamong.calc<-x[,size1]*((x[,PSUmean]-mu[x$strata.id])^2)/Nk
-	z$Vamong<-xtabs(x$Vamong.calc~x$strata.id)
+	Vamong.calc<-x[,size1]*((x[,PSUmean]-mu[x$strata.id])^2)/Nk
+	z$Vamong<-xtabs(Vamong.calc~x$strata.id)
 	Vamong<-match("Vamong",names(z))
 	}
 
@@ -175,8 +189,17 @@ if (ssyesno=="1"){
 		}
 
 #Add in extras and General Clean-up
+	sstotal<<-round(sum(z$n))
 	if(costyesno==0) z$cost<-(z[,PSUcost]*z$m)+(z[,Parcost]*z$n)
-	if (optyesno==0 | optyesno==1) z$Var<-(z[,Vamong]/z$m)+(z[,Vwithin]/z$n)
+	if (optyesno==0) z$Var<-(z[,Vamong]/z$m)+(z[,Vwithin]/z$n)
+	if (optyesno==0 & demoyesno==1) {
+		TotalVar<<-sum((z$ww^2)*z$Var)
+		CV<<-(sqrt(TotalVar)/T.Var)*100
+		z$CV<-(sqrt(z$Var)/z$mean.Var)*100
+		VarAmongStrat<-sum((z$Vwithin+z$Vamong)*z$ww)
+		VarWithinStrat<-sum(z$ww*((z$mean.Var-T.Var)^2))
+		Deff<<-TotalVar/((VarAmongStrat+VarWithinStrat)/sum(z$n))
+	}
 	z$strata.id<-x$strata.id<-x$strata.pop<-x$strata.n<-x$stratademo.pop<-x$demo.n<-x$row.names<-NULL
 	x<-x[order(x[,match(PSUname, names(x))]),]
 	row.names(x)<-c(seq(1:nrow(x)))

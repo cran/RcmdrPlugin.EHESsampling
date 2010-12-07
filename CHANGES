@@ -1,0 +1,12 @@
+Version 1.0
+
+ o  Initial version released to CRAN.
+
+
+Version 1.1
+
+ o  Fixed up bug in stage 1 sampling
+ o  Added in calculation for Deff and CV in sample sizes
+ o  Took out Vwithin and Vamong variable option in sample sizes
+ 
+

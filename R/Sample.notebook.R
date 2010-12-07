@@ -268,25 +268,13 @@ backward<-function(){
 	tkgrid.configure(PSUcostBox, costscr, sticky="nsew")
 	tkgrid(Parcostlabel, sticky="w")
 	tkgrid.configure(ParcostBox, Parscr, sticky="nsew")
-	tkgrid(PSUcostframe, Parcostframe, infoCost, sticky="nw")
+	tkgrid(PSUcostframe, Parcostframe, infoCost, sticky="w")
 	
 #Cost check box
 	costValue<-tclVar("0")
 	costCB<-tkcheckbutton(Opt,text="No cost information is available",command=function()costdisable())
 	tkconfigure(costCB, variable=costValue)
 	tkgrid(costCB, sticky="w", columnspan=2)
-	tkgrid(tklabel(Opt, text=""))
-
-#Variance Radio buttons frame
-	optlabel<-tklabel(Opt, text="Do you wish to calculate the VARIANCE WITHIN and VARIANCE AMONG PSUs from the PSU dataset?", justify="left",fg="blue")
-	rbopt1<-tkradiobutton(Opt)
-	rbopt2<-tkradiobutton(Opt)
-	rbopt3<-tkradiobutton(Opt)
-	optimalValue<-tclVar(1)
-	tkconfigure(rbopt1, variable=optimalValue, value=0, text="Yes", command=function()optdisable())
-	tkconfigure(rbopt2, variable=optimalValue, value=1, text="No - the STRATA dataset contains these variables", command=function()optdisable())
-	tkconfigure(rbopt3, variable=optimalValue, value=2, text="No - there is no variance information available", command=function()optdisable())
-	tkgrid(optlabel, sticky="w", columnspan=3)
 	tkgrid(tklabel(Opt, text=""))
 
 #PSU Variables frame
@@ -302,28 +290,17 @@ backward<-function(){
 	PSUmeanlabel<-tklabel(PSUmeanframe,text="The MEAN variable is:", fg="blue")
 	PSUmeanBox<-tklistbox(PSUmeanframe, height=4, selectmode="single", export="FALSE", yscrollcommand=function(...)tkset(PSUmscr,...),background="white")
 	tkgrid(PSUmeanlabel, sticky="w")
+	Varitext<-"The mean and variance of a key variable can be used to adjust \nsample sizes to minimise the overall variance. Only one variable can \nbe used for the optimisation, however the sample size process may \nbe repeated for other variables" 
+	infoVari<-info.bn(Opt, Varitext)
 	tkgrid.configure(PSUmeanBox, PSUmscr, sticky="we")
-	tkgrid(rbopt1, PSUmeanframe, PSUVframe, sticky="w")
-	tkgrid(tklabel(Opt, text=""))
+	tkgrid(PSUmeanframe, PSUVframe, infoVari, sticky="w")
 
-#Strata Variables frames
-	Vwithinframe<-tkframe(Opt)
-	Vwscr <- tkscrollbar(Vwithinframe, repeatinterval=5,command=function(...)tkyview(VwithinBox,...))
-	Vwithinlabel<-tklabel(Vwithinframe,text="The variance WITHIN PSUs is:", fg="blue")
-	VwithinBox<-tklistbox(Vwithinframe, height=4, selectmode="single", export="FALSE", yscrollcommand=function(...)tkset(Vwscr,...),background="white")
-	tkgrid(Vwithinlabel, sticky="w")
-	tkgrid.configure(VwithinBox, Vwscr, sticky="we")
-	Vamongframe<-tkframe(Opt)
-	Vascr <- tkscrollbar(Vamongframe, repeatinterval=5,command=function(...)tkyview(VamongBox,...))
-	Vamonglabel<-tklabel(Vamongframe,text="The variance AMONG PSUs is:", fg="blue")
-	VamongBox<-tklistbox(Vamongframe, height=4, selectmode="single", export="FALSE", yscrollcommand=function(...)tkset(Vascr,...),background="white")
-	tkgrid(Vamonglabel, sticky="w")
-	tkgrid.configure(VamongBox, Vascr, sticky="we")
-	Opttext<-"Optimal sampling sizes can help reduce the variance of estimates and \nminimise sampling costs. The variance within and among PSUs is used to \nreduce the variance of the estimates. If these have not been calculated\n prior to importing the datasets,they can be calculated from the mean \nand variance of a key variable in the Primary Sampling Unit dataset."
-	infoOpt<-info.bn(Opt, Opttext)
-	tkgrid(rbopt2,Vwithinframe,Vamongframe, infoOpt, sticky="w")
+#Variable check box
+	optimalValue<-tclVar("0")
+	optimalCB<-tkcheckbutton(Opt,text="No variable information is available",command=function()variabledisable())
+	tkconfigure(optimalCB, variable=optimalValue)
+	tkgrid(optimalCB, sticky="w", columnspan=2)
 	tkgrid(tklabel(Opt, text=""))
-	tkgrid(rbopt3, sticky="w")
 
 
 ### PUT IN VARIABLES ###
@@ -345,7 +322,7 @@ getvars<-function(){
 				}
 			}
 		ssdisable()
-		optdisable()
+		variabledisable()
 		costdisable()
 		mk.variable()
 		}
@@ -353,7 +330,7 @@ getvars<-function(){
 getvars2<-function(){
 	if (length(as.numeric(tkcurselection(strataBox.c))+1)>0){
 		variables3<-names(get(variables[as.numeric(tkcurselection(strataBox.c))+1]))
-		boxes<-list(strataBox.d, sizeBox.d, mkBox, ssBox, VwithinBox, VamongBox, PSUcostBox, ParcostBox)
+		boxes<-list(strataBox.d, sizeBox.d, mkBox, ssBox, PSUcostBox, ParcostBox)
 		for (j in 1:length(boxes)){
 			tkconfigure(boxes[[j]], state="normal")
 			tkdelete(boxes[[j]],0,"end")
@@ -362,7 +339,7 @@ getvars2<-function(){
 		StrataVarSelect()
 		SizeVarSelect()
 		ssdisable()
-		optdisable()
+		variabledisable()
 		costdisable()
 		mk.variable()
 		disable.fn(calcsizeValue,sizeBox.d, sizelabel.d)
@@ -454,15 +431,10 @@ SizeVarSelect<-function(){
 		if (tclvalue(costValue)==0) setstate(b, "normal")
 		}
 
-	optdisable<-function(){
+	variabledisable<-function(){
 		a<-list(PSUVBox, PSUVlabel, PSUmeanBox, PSUmeanlabel)
-		b<-list(VwithinBox, VamongBox, Vwithinlabel, Vamonglabel)
-		if (tclvalue(optimalValue)==0) { setstate(a, "normal") 
-			setstate(b, "disabled") }
-		if (tclvalue(optimalValue)==1) { setstate(a, "disabled")
-			setstate(b, "normal") }
-		if (tclvalue(optimalValue)==2){ setstate(a, "disabled")
-			setstate(b, "disabled") }
+		if (tclvalue(optimalValue)==0) setstate(a, "normal") 
+		if (tclvalue(optimalValue)==1) setstate(a, "disabled")
 		}
 
 	psdisable<-function(){
@@ -488,29 +460,28 @@ SizeVarSelect<-function(){
 		disable.fn(mkValue, mkBox, mkvarlabel)
 		if (tclvalue(mkValue)==1) {
 			tclvalue(costValue)<-0
-			if (tclvalue(optimalValue)==2) tclvalue(optimalValue)<-0
+			tclvalue(optimalValue)<-0
 			costdisable()
-			optdisable()
+			variabledisable()
 			tkconfigure(costCB, state="disabled")
-			tkconfigure(rbopt3, state="disabled")
+			tkconfigure(optimalCB, state="disabled")
 			}	
 		if (tclvalue(mkValue)==0) {	
 			tkconfigure(costCB, state="normal")
-			tkconfigure(rbopt3, state="normal")
+			tkconfigure(optimalCB, state="normal")
 			}
 		}
 
 	stratadisable<-function(){
 		getvars3()
-		v<-list(rbopt2, strataBox.c, stratalabel.c, sizeBox.d, sizelabel.d, strataBox.d, stratalabel.d, calcsizeCB)
+		v<-list(strataBox.c, stratalabel.c, sizeBox.d, sizelabel.d, strataBox.d, stratalabel.d, calcsizeCB)
 		if (tclvalue(stratayesno)=="1") {
 			setstate(v, "disabled")
-			if (tclvalue(optimalValue)==1) tclvalue(optimalValue)<-0
-			optdisable()
+			variabledisable()
 			}
 		if (tclvalue(stratayesno)=="0") {
 			setstate(v, "normal")
-			disable.fn(calcsizeValue,sizeBox.d, sizelabel.d)
+			disable.fn(calcsizeValue, sizeBox.d, sizelabel.d)
 			}
 		mk.variable()
 		ssdisable()
@@ -520,7 +491,7 @@ SizeVarSelect<-function(){
 ### Initial disabling ###
 	ssdisable()
 	mk.variable()
-	optdisable()
+	variabledisable()
 
 ### ON OK FUNCTION ###
 review.fn<-function(){
@@ -577,11 +548,9 @@ review.fn<-function(){
 
 		# from opt sampling
 		costyesno<-tclvalue(costValue) #0 is there is cost information, 1 is no information
-		optyesno<-tclvalue(optimalValue)  #0 is do calculate, 1 is use strata dataset, 2 is don't do anything 
+		optyesno<-tclvalue(optimalValue)  #0 is there are variable information, 1 is no information 
 		Parcost <- as.numeric(tkcurselection(ParcostBox))+1
 		PSUcost <- as.numeric(tkcurselection(PSUcostBox))+1
-		Vamong<-as.numeric(tkcurselection(VamongBox))+1 
-		Vwithin<-as.numeric(tkcurselection(VwithinBox))+1
 		PSUV<-as.numeric(tkcurselection(PSUVBox))+1
 		PSUmean<-as.numeric(tkcurselection(PSUmeanBox))+1
 
@@ -614,10 +583,6 @@ review.fn<-function(){
 			return()}
 		if (length(PSUmean)==0 & optyesno==0) {check.fn("PSU MEAN", "Optimal Sampling") 
 			return()}
-		if (length(Vamong)==0 & stratayesno==0 & optyesno==1) {check.fn("VARIANCE AMONG PSUs", "Optimal Sampling") 
-			return()}
-		if (length(Vwithin)==0 & stratayesno==0 & optyesno==1) {check.fn("VARIANCE WITHIN PSUs", "Optimal Sampling") 
-			return()}
 		if (length(Parcost)==0 & mkvalue==1) {check.fn("PARTICIPANT COST", "Optimal Sampling") 
 			return()}
 		if (length(PSUcost)==0 & mkvalue==1) {check.fn("PSU COST", "Optimal Sampling") 
@@ -639,40 +604,43 @@ review.fn<-function(){
 		command<-paste("SampleSizes(df1=",df1, ", df2=",df2,", PSU1=",PSU1,", strata1=",strata1,", size1=",size1,", demo1=",list(demo1),", demoyesno=", demoyesno, 
 		", strata2=",strata2,", size2=",size2,", calcsizevalue=",calcsizevalue, ", stratayesno=", stratayesno,
 		", mkvar=", mkvar,", mkvalue=", mkvalue,", ssyesno=", ssyesno, ", ssvar=", ssvar, ", sstotal=", sstotal, ", ppstype=", ppstype,
-		", nminimum=", nminimum, ", nfixed=", nfixed, ", Parcost=", Parcost, ", PSUcost=",PSUcost, ", Vwithin=", Vwithin, ", Vamong=",Vamong,
+		", nminimum=", nminimum, ", nfixed=", nfixed, ", Parcost=", Parcost, ", PSUcost=",PSUcost,
 		", PSUV=",PSUV,", PSUmean=", PSUmean, ", optyesno=", optyesno, ", costyesno=", costyesno, ")\n",sep="")
 		samplesizedatasets<-justDoIt(command)
 
        ### Add in report ###
 	if (reportyesno==1) {
-		sstotal<-round(sum(samplesizedatasets$StrataSS$n))
+		
 		if (costyesno==0) costtotal<-round(sum(samplesizedatasets$StrataSS$cost))
 		df1names<-names(get(df1))
 		if (stratayesno==0) df2names<-names(get(df2))
 		if (stratayesno==1) df2names<-names(get(df1))
-
-		cat("Documentation for EHES sampling - Calculating Sample Sizes\n\nDate:",date(),"\nR Version:", paste(getRversion()),"\nRcmdrPlugin.EHESsampling Version: 1.0\nWorking Directory:", getwd(),
+		
+		cat("Documentation for EHES sampling - Calculating Sample Sizes\n\nDate:",date(),"\nR Version:", paste(getRversion()),"\nRcmdrPlugin.EHESsampling Version: ", packageDescription("RcmdrPlugin.EHESsampling")$Version, "\nWorking Directory:", getwd(),
 		"\n\nDatasets...\nThe dataset containing Primary Sampling Units was called:", df1,
 		ifelse(stratayesno==0, "\nThe dataset containing stratification information was called:", "\nNo separate stratification dataset was used"), 
 		if (stratayesno==0) df2,
-		"\n\nPrimary Sampling Unit Dataset Details...\nThe Primary Sampling Unit variable was:", df1names[PSU1], "\nThe Size variable was:", df1names[size1],
+		"\n\nPSU Dataset Details...\nThe Primary Sampling Unit variable was:", df1names[PSU1], "\nThe Size variable was: ", df1names[size1],
 		if (demoyesno==0) c("\nThe second stage stratification (domain) variables were: ", df1names[demo1]),
 		if (demoyesno==1) "\nNo second stage stratification (domain) variables were used",
-		if (stratayesno==0) c("\n\nStratification Dataset Details...\nThe stratitfication variable was:", df2names[strata2]), 
+		if (stratayesno==0) c("\n\nStratification Dataset Details...\nThe stratitfication variable was: ", df2names[strata2]), 
 		if (stratayesno==0 & calcsizevalue==0) c("\nThe size variable was:", df2names[size2]),
 		if (stratayesno==0 & calcsizevalue==1) "\nThere was no size variable in the stratification dataset",
 		if (mkvalue==0) "\nThe stage 1 sample size variable was called:",
 		if (mkvalue==0) ifelse(stratayesno==0, df2names[mkvar], df1names[mkvar]),
 		if (mkvalue==1) "\nOptimisation of stage 1 sample sizes was selected",
-		if (ssyesno==0) "\nThe datset contained the strata sample sizes variable:",
+		if (ssyesno==0) "\nThe datset contained the strata sample sizes variable: ",
 		if (ssyesno==0) ifelse(stratayesno==0, df2names[ssvar], df1names[ssvar]),
-		if (ssyesno==1) c("\nThe dataset did not contain a strata sample size variable\nThe total sample size was:", sstotal),
+		if (ssyesno==1) c("\nThe dataset did not contain a strata sample size variable"),
 		if (ssyesno==1 & ppstype==1) "\nThe strata sample sizes were selected to be distributed proportional to size",
-		if (ssyesno==1 & ppstype==2) c("\nThe strata sample sizes were selected to be distributed proportional to size with a minumum of:", nminimum),
-		if (ssyesno==1 & ppstype==3) c("\nThe strata sample sizes were selected to be a fixed size of:", nfixed),
-		if (mkvalue==1 & optyesno==0) c("\nOptimal sample sizes were calculated using the PSU dataset mean and variance variables:", df1names[PSUmean], df1names[PSUV]),
-		if (mkvalue==1 & optyesno==1) c("\nOptimal sample sizes were calculated using the Stratification dataset Variance Within and Variance among variables:", df2names[Vamong], df2names[Vwithin]),
-		if (costyesno==0) c("\nThe cost was calculated using the variables:", df2names[PSUcost], df2names[Parcost],"\nThe total cost came to: ", costtotal),
+		if (ssyesno==1 & ppstype==2) c("\nThe strata sample sizes were selected to be distributed proportional to size with a minumum of: ", nminimum),
+		if (ssyesno==1 & ppstype==3) c("\nThe strata sample sizes were selected to be a fixed size of: ", nfixed),
+		if (mkvalue==1 & optyesno==0) c("\nOptimal sample sizes were calculated using the PSU dataset mean and variance variables: ", df1names[PSUmean], df1names[PSUV]),
+		if (costyesno==0) c("\nThe cost was calculated using the variables: ", df2names[PSUcost], df2names[Parcost]),
+		"\n\nAdditional Details...\nThe total sample size was: ", sstotal,
+		if (costyesno==0) c("\nThe total cost came to: ", costtotal),
+		if (optyesno==0 & demoyesno==1) c("\nThe weighted mean for the key variable is estimated as: ", signif(T.Var,digits=4), "\nThe overall variance for the key variable is estimated as: ", signif(TotalVar, digits=4)),
+		if (optyesno==0 & demoyesno==1) c("\nThe CV (as a percentage) for the key variable is estimated as: ", signif(CV, digits=4), "\nThe Design effect is estimated as: ", signif(Deff, digits=4)),
 		"\n", file=reportname)
 		}
 
