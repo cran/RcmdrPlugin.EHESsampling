@@ -1,3 +1,18 @@
+######## Required variables - all in input dataset!
+#COUNTRY 
+#SURVEY 
+#STRATUM_ID 
+#PSU_SN
+#PSU_SIZE 
+#ST1_PROB 
+#ST2_DOMAINS 
+#DOMAIN_ID 
+#DOMAIN_SIZE_
+#ST2_PROB 
+#ST2_ANT_SSU
+#ST2_SEL_SSU
+##########
+
 
 stage1Sample.fn <-function(stage1df, PSU, strata, inclus, samplingtype, randomPSU){
 
@@ -40,19 +55,14 @@ Selected.PSU<-x[which(x[,PSU] %in% sample[,PSU2]),]
 
 #Randomize PSU order if check button selected
 if (randomPSU==1){
-	sample.ordered<-NULL
-	for (i in 1:max(sample$strata.id)){
-		temp<-subset(sample, strata.id==i)
-		temp$rand<-runif(nrow(temp))
-		temp<-temp[order(temp$rand),]
-		sample.ordered<-rbind(sample.ordered,temp)
-	}
-	sample.ordered$PSUorder<-seq(1:nrow(sample.ordered))
-	Selected.PSU$PSUorder<-sample.ordered$PSUorder[match(Selected.PSU$postcode,sample.ordered$postcode)]
-	Selected.PSU<-Selected.PSU[order(Selected.PSU$PSUorder),]
+	Selected.PSU$rand<-runif(nrow(Selected.PSU))
+	rrr<-tapply(Selected.PSU$rand, FUN=min, INDEX=factor(Selected.PSU[,PSU]))
+	Selected.PSU$rrr<-rrr[match(Selected.PSU[,PSU], rownames(rrr))]
+	Selected.PSU<-Selected.PSU[order(Selected.PSU[,strata], Selected.PSU$rrr),]
+
 }
 
 #Tidy up 
-row.names(Selected.PSU)<-Selected.PSU$I<-Selected.PSU$strata.id<-Selected.PSU$PSUorder<-NULL
+row.names(Selected.PSU)<-Selected.PSU$I<-Selected.PSU$strata.id<-Selected.PSU$PSUorder<-Selected.PSU$rand<-Selected.PSU$rrr<-NULL
 return(Selected.PSU)
 }

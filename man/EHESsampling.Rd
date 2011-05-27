@@ -10,5 +10,5 @@ A detailed user-friendly manual has been created. Please contact one of the main
 \references{see the EHES manual published on the EHES website:
 http://www.ehes.info}
 \author{Statistics Norway\cr
-Maintainer: susie.cooper@ssb.no & johan.heldal@ssb.no}
+Maintainer: susie.jentoft@ssb.no & johan.heldal@ssb.no}
 \keyword{ survey }

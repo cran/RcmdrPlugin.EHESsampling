@@ -18,6 +18,3 @@ item    CheckMenu       command            "Add control digit..."               
 item    CheckMenu       command            "Create encoded numbers..."                     CreateDigits                ""                  ""
 item    CheckMenu       command            "Check encoded numbers..."                      Check                       ""       ""
 item    EHESMenu        cascade            "Check Digits"                                  CheckMenu                   ""                  ""
-
-item    AnalysisMenu    command            "Calculate Weights"                         	   OpenWeights                 "FALSE"             ""
-item    EHESMenu        cascade            "Analysis"                                      AnalysisMenu                ""                  ""

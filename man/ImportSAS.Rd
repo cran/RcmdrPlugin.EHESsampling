@@ -4,5 +4,5 @@
 \title{Importing a SAS data set file into R}
 \description{Imports a SAS dataset with the help of the Hmisc package in Rcmdr}
 \author{Statistics Norway\cr
-Maintainer: susie.cooper@ssb.no & johan.heldal@ssb.no}
+Maintainer: susie.jentoft@ssb.no & johan.heldal@ssb.no}
 \keyword{ survey }

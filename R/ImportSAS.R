@@ -5,7 +5,7 @@ importSAS<-function(){
    ### Name for the dataset ###
 	dataname<-tclVar("Dataset")
 	nameField<-tkentry(top, width="20", textvariable=dataname)
-	tkgrid(labelRcmdr(top, text="Enter a name for the imported dataset:", fg="blue"), nameField, sticky="w")
+	tkgrid(tklabel(top, text="Enter a name for the imported dataset:", fg="blue"), nameField, sticky="w")
 	tkgrid(tklabel(top, text=""))
 
    ### Locate the file to open ###
@@ -13,7 +13,7 @@ importSAS<-function(){
 	filevar<-tclVar("")
 	filefield<-tkentry(fileframe, width="40", textvariable=filevar)
 	tkconfigure(filefield, textvariable=filevar)
-	file.bn<-ttkbutton(fileframe, text="Browse", command=function()getfile())
+	file.bn<-tkbutton(fileframe, text="Browse", command=function()getfile())
 	tkgrid(labelRcmdr(fileframe, text="Enter the file to import:", fg="blue"), filefield, file.bn)
 	tkgrid(fileframe, sticky="w", columnspan=3)
 	tkgrid(tklabel(top, text=""))
@@ -24,7 +24,7 @@ importSAS<-function(){
 	formatvar<-tclVar("")
 	formatfield<-tkentry(formatframe, width="42", textvariable=formatvar)
 	tkconfigure(formatfield, textvariable=formatvar)
-	format.bn<-ttkbutton(formatframe, text="Browse", command=function()getformat())
+	format.bn<-tkbutton(formatframe, text="Browse", command=function()getformat())
 	tkgrid(formatlabel, formatfield, format.bn)
 	tkgrid(formatframe, sticky="w", columnspan=3)
 
@@ -40,10 +40,13 @@ importSAS<-function(){
 	if (!exists("SASlocation")) SASlocation<-""
 	SASvar<-tclVar(SASlocation)
 	SASfield<-tkentry(SASframe, width="30", textvariable=SASvar)
-	SAS.bn<-ttkbutton(SASframe, text="Browse", command=function()getSAS())
+	SAS.bn<-tkbutton(SASframe, text="Browse", command=function()getSAS())
+
+if(Sys.info()[["sysname"]] != "Linux" & Sys.info()[["sysname"]] !="Unix") {
 	tkgrid(tklabel(SASframe, text="Enter the path to the program SAS:", fg="blue"), SASfield, SAS.bn, sticky="w")
 	tkgrid(tklabel(SASframe, text=""))
 	tkgrid(SASframe, sticky="new", columnspan=3)
+	}
 
    ### Place file name in field
 	getfile<-function(){
@@ -101,19 +104,31 @@ importSAS<-function(){
 			tkmessageBox(message="Warning: You are using an old version of Hmisc that might not work properly")
 			}
 		SASlocation<-tclvalue(SASvar)
-		doItAndPrint(paste("SASlocation<-\"", tclvalue(SASvar), "\"", sep=""))
-		command<- if (formatyesno=="1"){
-			paste(ds1, "<-sas.get(libraryName = \"", lib, "\", member = \"", n, "\", sasprog = \"", SASlocation, "/sas.exe\", formats=FALSE)", sep="")
-			} else {
-			paste(ds1, "<-sas.get(libraryName = \"", lib, "\", member = \"", n, "\", format.library = \"", f, "\", sasprog = \"", SASlocation, "/sas.exe\")", sep="")
-			}
+	
+		if(Sys.info()[["sysname"]] == "Linux" | Sys.info()[["sysname"]] =="Unix") {
+			command<- if (formatyesno=="1"){
+				paste(ds1, "<-sas.get(libraryName =  ", '"', lib, '"', ", member = ", '"', n, '"', ", formats=FALSE)", sep="")
+				} else {
+				paste(ds1, "<-sas.get(libraryName = ",'"', lib, '"', ", member = ", '"', n, '"', ", format.library = ", '"', f, '"', ")", sep="")
+				}
+		} else { 
+			doItAndPrint(paste("SASlocation<-\"", tclvalue(SASvar), "\"", sep=""))
+			command<- if (formatyesno=="1"){
+				paste(ds1, "<-sas.get(libraryName = \"", lib, "\", member = \"", n, "\", sasprog = \"", SASlocation, "/sas.exe\", formats=FALSE)", sep="")
+				} else {
+				paste(ds1, "<-sas.get(libraryName = \"", lib, "\", member = \"", n, "\", format.library = \"", f, "\", sasprog = \"", SASlocation, "/sas.exe\")", sep="")
+				}
+		} 
 		doItAndPrint(command)
 		activeDataSet(ds1)
         	tkfocus(CommanderWindow())
-		}
+		return()
+	}
 
    ### final bits ###
 	OKCancelHelp(helpSubject="sas.get")
 	tkgrid(buttonsFrame, columnspan=3, sticky="w")
 	dialogSuffix(rows=4, columns=2, focus=buttonsFrame)
-	}
+}
+
+	

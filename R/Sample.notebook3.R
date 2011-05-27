@@ -1,8 +1,58 @@
-Sample.notebook<-function(){
+
+
+Sample.datasets<-function(){
+	initializeDialog(title="Data sets")
+	variables<-listDataSets()
+
+# PSU Box
+	PSUBox<-variableListBox2(top, variableList=variables, title="Select the PRIMARY SAMPLING UNIT data set:")
+
+# StrataBox with check button
+	strataBox<-variableListBox2(top, variableList=variables, title="Select the Stratification data set:")
+	stratayesno<-tclVar("0")
+	strataCB<-tkcheckbutton(top, text="No stratification dataset",command=function()disable.fn2(stratayesno, strataBox))
+	tkconfigure(strataCB, variable=stratayesno)
+
+#forward function
+	onOK<-function(){
+		df1<-getSelection(PSUBox)
+		stratayesno <-tclvalue(stratayesno) #0 is yes stratadataset, 1 is create dataset
+		if (stratayesno==0) {df2<-getSelection(strataBox)} else {df2<-getSelection(PSUBox)}
+
+		if (length(df1)==0) {check.fn2("PSU DATASET") 
+			return()}
+
+		if (stratayesno==0 & length(df2)==0) {check.fn2("STRATIFICATION DATASET") 
+			return()}
+
+		tkdestroy(top)
+		if (Sys.info()[["sysname"]] == "Linux" |Sys.info()[["sysname"]] == "Unix") {
+			PSU.options(df1=df1, df2=df2, stratayesno=stratayesno)} else {
+			ALL.options(df1=df1, df2=df2, stratayesno=stratayesno)}
+	}
+
+#Grid
+	tkgrid(getFrame(PSUBox), sticky="w")
+	tkblank(top)
+	tkgrid(getFrame(strataBox), sticky="w")
+	tkgrid(strataCB, sticky="w")
+	tkblank(top)
+
+#help and buttons
+	OKCancelHelp2(window=top, onHelp=dataonHelp)
+	tkgrid(buttonsFrame, columnspan="2", sticky="w")
+	dialogSuffix(rows=3, window=top, focus=buttonsFrame)
+}
+
+
+
+# Notebook for calculating sample sizes (Windows version)
+
+ALL.options<-function(df1, df2, stratayesno){
 	one<-samplecheck<-StrataSampleSize<-PSUSampleSize<-top<-NULL
 
 	initializeDialog(title="Sample Sizes")
-	nb<-tk2notebook(top, tabs=c("PSU Dataset", "PSU Details", "Strata Dataset", "Strata Details", "Cost/Variance Details"))
+	nb<-tk2notebook(top, tabs=c("PSU Details", "Strata Details", "Cost/Variance Details"))
 	tkpack(nb, fill="both", expand=2)
 	tkconfigure(nb, width=700)
 	tkgrid(nb,columnsp=2)
@@ -12,46 +62,32 @@ Sample.notebook<-function(){
 	tkgrid(back.bn, next.bn)
 	
 forward<-function(){
-	if (tk2notetab.text(nb)=="PSU Dataset") tk2notetab.select(nb,"PSU Details")
-	else if (tk2notetab.text(nb)=="PSU Details") tk2notetab.select(nb,"Strata Dataset")
-	else if (tk2notetab.text(nb)=="Strata Dataset") tk2notetab.select(nb,"Strata Details")
+	if (tk2notetab.text(nb)=="PSU Details") tk2notetab.select(nb,"Strata Details")
 	else if (tk2notetab.text(nb)=="Strata Details") tk2notetab.select(nb,"Cost/Variance Details")
 	else if (tk2notetab.text(nb)=="Cost/Variance Details") review.fn()
 	}
 
 backward<-function(){
-	if (tk2notetab.text(nb)=="PSU Dataset") tk2notetab.select(nb,"PSU Dataset")	
-	else if (tk2notetab.text(nb)=="PSU Details") tk2notetab.select(nb,"PSU Dataset")	
-	else if (tk2notetab.text(nb)=="Strata Dataset") tk2notetab.select(nb,"PSU Details")
-	else if (tk2notetab.text(nb)=="Strata Details") tk2notetab.select(nb,"Strata Dataset")
+	if (tk2notetab.text(nb)=="PSU Details") tk2notetab.select(nb,"PSU Details")
+	else if (tk2notetab.text(nb)=="Strata Details") tk2notetab.select(nb,"PSU Details")
 	else if (tk2notetab.text(nb)=="Cost/Variance Details") tk2notetab.select(nb,"Strata Details")
 	}
 
 
-###### PSU dataset tab #######
-	PSU.a<-tk2notetab(nb, "PSU Dataset")
-	variables<-listDataSets()
-	PSUlabel<-tklabel(PSU.a,text="Select the PRIMARY SAMPLING UNIT dataset", fg="blue")
-	frame.a<-tkframe(PSU.a)
-	PSUscr <- tkscrollbar(frame.a, repeatinterval=5,command=function(...)tkyview(PSUBox,...))
-	PSUBox<-tklistbox(frame.a, height=6, selectmode="single", export="FALSE", yscrollcommand=function(...)tkset(PSUscr,...),background="white")
-	view.but<-tk2button(PSU.a, text="dataset preview", command=function()DataPreview(PSUBox))
-	tkgrid(tklabel(PSU.a, text=""))
-	tkgrid(PSUlabel)
-	tkgrid.configure(PSUBox,PSUscr, sticky="nsw")
-	tkgrid(frame.a, view.but, sticky="w")
-	for (i in 1:length(variables)) tkinsert(PSUBox, "end", variables[i])
-
-
 ### PSU DETAILS tab ###
+	variables<-names(get(df1))
+	variables2<-names(get(df2))
 	PSU.b<-tk2notetab(nb, "PSU Details")
 	tkgrid(tklabel(PSU.b,text=""))
 	
+
 #PSU List Box
+	
 	PSUframe.b<-tkframe(PSU.b)
 	PSUlabel.b<-tklabel(PSU.b, text="The PSU variable is:", fg="blue")
 	PSUscr.b <- tkscrollbar(PSUframe.b, repeatinterval=5,command=function(...)tkyview(PSUBox.b,...))
-	PSUBox.b<-tklistbox(PSUframe.b, height=4, selectmode="single", export="FALSE", yscrollcommand=function(...)tkset(PSUscr.b,...),background="white")
+	PSUBox.b<-tklistbox(PSUframe.b, height=4, selectmode="single", export="FALSE", yscrollcommand=function(...)tkset(PSUscr.b,...),
+		background="white")
 	tkgrid(PSUlabel.b, sticky="w")
 	tkgrid.configure(PSUBox.b,PSUscr.b)
 
@@ -96,7 +132,7 @@ backward<-function(){
 	demoscr <- tkscrollbar(demoframe, repeatinterval=5,command=function(...)tkyview(demoBox,...))
 	demoBox<-tklistbox(demoframe, height=8, selectmode="multiple", export="FALSE", yscrollcommand=function(...)tkset(demoscr,...),background="white")
 	tkgrid.configure(demoBox,demoscr, sticky="nsw")
-	Demotext<-"The Stage 2 stratification variables should list the size of each domain in each of the \nPrimary Sampling Units. For example, information on gender distributions may be available for \neach PSUs and the dataset would contain 2 columns, one for the number of females in each\n PSU and one for the number of males in each PSU."
+	Demotext<-"The Stage 2 stratification variables should list the size of each domain in each of the \nPrimary Sampling Units. For example, information on sex distributions may be available for \neach PSUs and the dataset would contain 2 columns, one for the number of females in each\n PSU and one for the number of males in each PSU."
 	infoDemo<-info.bn(PSU.b, Demotext)
 
 	tkgrid(demolabel, sticky="w", columnspan=2)
@@ -104,27 +140,6 @@ backward<-function(){
 	tkgrid(demoCB, sticky="w")
 	tkgrid(tklabel(PSU.b, text=""))
 
-
-### STRATA DATASET TAB ###
-	Strata.tab<-tk2notetab(nb, "Strata Dataset")
-	stratalabel.c<-tklabel(Strata.tab,text="Select the STRATIFICATION dataset", fg="blue")
-	frame.c<-tkframe(Strata.tab)
-	stratascr.c <- tkscrollbar(frame.c, repeatinterval=5,command=function(...)tkyview(strataBox.c,...))
-	strataBox.c<-tklistbox(frame.c, height=6, selectmode="single", export="FALSE", yscrollcommand=function(...)tkset(stratascr.c,...),background="white")
-	view.but<-tk2button(Strata.tab, text="dataset preview", command=function()DataPreview(strataBox.c))
-	Stratatext.c<-"The STRATIFICATION dataset provides summary information on each stratum. This dataset \nshould contain one stratum for each line and the stratum indicator variable should be \nthe same as used in the PSU dataset. Other variables may include size of the strata, \nthe cost of setting up a PSU and the cost of inviting a participant in each stratum. \nIf no strata datset is available, check the No stratification dataset check box. \nThis means, summaries will be created from the PSU dataset."
-	infoStrata.c<-info.bn(Strata.tab, Stratatext.c)
-
-	tkgrid(tklabel(Strata.tab, text=""))
-	tkgrid(stratalabel.c, infoStrata.c)
-	tkgrid.configure(strataBox.c, stratascr.c, sticky="nsw")
-	tkgrid(frame.c, view.but, sticky="w")
-	for (i in 1:length(variables)) tkinsert(strataBox.c, "end", variables[i])
-	stratayesno<-tclVar("0")
-	strataCB<-(tkcheckbutton(Strata.tab, text="No stratification dataset",command=function()stratadisable()))
-	tkconfigure(strataCB, variable=stratayesno)
-	tkgrid(strataCB, sticky="w")
-	
 
 ###### Strata Details Tab ########
 	Strata.d<-tk2notetab(nb, "Strata Details")
@@ -142,21 +157,6 @@ backward<-function(){
 	tkgrid(strataframe.d, sticky="w")	
 	tkgrid(tklabel(Strata.d, text=""))
 
-#Size Box
-	sizeframe.d<-tkframe(Strata.d)
-	sizescr.d <- tkscrollbar(sizeframe.d, repeatinterval=5,command=function(...)tkyview(sizeBox.d,...))
-	sizelabel.d<-tklabel(Strata.d,text="The SIZE variable is:", fg="blue")
-	sizeBox.d<-tklistbox(sizeframe.d, height=4, selectmode="single", export="FALSE", yscrollcommand=function(...)tkset(sizescr.d,...),background="white")
-	tkgrid.configure(sizeBox.d, sizescr.d)
-	Sizetext.d<-"The SIZE variable should list the size of each STRATUM. This may be in terms \nof the population size or the number of addresses/dwellings."
-	infoSize.d<-info.bn(Strata.d, Sizetext.d)
-	calcsizeValue<-tclVar("0")
-	calcsizeCB<-tkcheckbutton(Strata.d,text="Calculate size from PSU dataset",command=function()disable.fn(calcsizeValue,sizeBox.d, sizelabel.d))
-	tkconfigure(calcsizeCB, variable=calcsizeValue)
-	tkgrid(sizelabel.d, infoSize.d, sticky="w")
-	tkgrid(sizeframe.d, sticky="w")
-	tkgrid(calcsizeCB, sticky="w", columnspan=2)
-	tkgrid(tklabel(Strata.d, text=""))
 
 # m variable box
 	mkvarframe<-tkframe(Strata.d,relief="groove", borderwidth=1)
@@ -221,25 +221,28 @@ backward<-function(){
 	rbpps1<-tkradiobutton(ssradioframe)
 	rbpps2<-tkradiobutton(ssradioframe)
 	rbpps3<-tkradiobutton(ssradioframe)
+	rbpps4<-tkradiobutton(ssradioframe)
 	ppsValue<-tclVar(1)
 	tkconfigure(rbpps1, variable=ppsValue, value=1, text="", command=function()psdisable())
 	tkconfigure(rbpps2, variable=ppsValue, value=2, text="", command=function()psdisable())
 	tkconfigure(rbpps3, variable=ppsValue, value=3, text="", command=function()psdisable())
+	tkconfigure(rbpps4, variable=ppsValue, value=4, text="", command=function()psdisable())
 	tkgrid(rbpps1,sticky="nw")
 	tkgrid(rbpps2, sticky="nw")	
 	tkgrid(rbpps3, sticky="nw")	
+	tkgrid(rbpps4, sticky="nw")	
 
 	ppsframe<-tkframe(ssboxframe)
 	pps1label<-tklabel(ppsframe,text="Proportional to Size (recommended)")
 	pps2label<-tklabel(ppsframe,text="Proportional to Size with a minimum in each stratum of")
 	pps2<-tclVar(1000)
 	pps2Field<-tkentry(ppsframe, width="5", textvariable=pps2)
-	pps3label<-tklabel(ppsframe,text="Fixed Sample Size per stratum of ")
-	pps3<-tclVar(1000)
-	pps3Field<-tkentry(ppsframe, width="5", textvariable=pps3)
+	pps3label<-tklabel(ppsframe,text="Fixed Sample Size per stratum")
+	pps4label<-tklabel(ppsframe,text="Neymans Allocation")
 	tkgrid(pps1label, sticky="w")
-	tkgrid(pps2label,pps2Field, sticky="w")	
-	tkgrid(pps3label,pps3Field, sticky="w")
+	tkgrid(pps2label, pps2Field, sticky="w")	
+	tkgrid(pps3label, sticky="w")
+	tkgrid(pps4label, sticky="w")
 
 # Grid the strata ss options
 	tkgrid(sscalcframe, columnspan=2, sticky="w")
@@ -247,6 +250,7 @@ backward<-function(){
 	tkgrid(ppslabel, sticky="w", columnspan=3)
 	tkgrid(ssradioframe, ppsframe, sticky="w")
 	tkgrid(ssboxframe, sticky="w",columnspan=3)
+
 
 ### Cost/Variance Tab tab ###
 	Opt<-tk2notetab(nb, "Cost/Variance Details")
@@ -302,158 +306,52 @@ backward<-function(){
 	tkgrid(optimalCB, sticky="w", columnspan=2)
 	tkgrid(tklabel(Opt, text=""))
 
+#Put in variables Variables
+	boxes1<-list(PSUBox.b, sizeBox.b, strataBox.b, demoBox, PSUVBox, PSUmeanBox)
+	for (j in 1:length(boxes1)) for (i in 1:length(variables)) tkinsert(boxes1[[j]], "end", variables[i])
 
-### PUT IN VARIABLES ###
-getvars<-function(){
-		variables2<-names(get(variables[as.numeric(tkcurselection(PSUBox))+1]))
-		boxes1<-list(PSUBox.b, sizeBox.b, strataBox.b, demoBox, PSUVBox, PSUmeanBox)
-		for (j in 1:length(boxes1)) {
-			tkconfigure(boxes1[[j]], state="normal")
-			tkdelete(boxes1[[j]],0,"end")
-			for (i in 1:length(variables2)) tkinsert(boxes1[[j]], "end", variables2[i])
-			}
-		if (tclvalue(demoValue)==1) tkconfigure(demoBox, state="disabled")
-		if (tclvalue(stratayesno)=="1") {
-			boxes2<-list(mkBox, ssBox, PSUcostBox, ParcostBox)
-			for (j in 1:length(boxes2)){
-				tkconfigure(boxes2[[j]], state="normal")
-				tkdelete(boxes2[[j]],0,"end")
-				for (i in 1:length(variables2)) tkinsert(boxes2[[j]], "end", variables2[i])
-				}
-			}
-		ssdisable()
-		variabledisable()
-		costdisable()
-		mk.variable()
-		}
-
-getvars2<-function(){
-	if (length(as.numeric(tkcurselection(strataBox.c))+1)>0){
-		variables3<-names(get(variables[as.numeric(tkcurselection(strataBox.c))+1]))
-		boxes<-list(strataBox.d, sizeBox.d, mkBox, ssBox, PSUcostBox, ParcostBox)
-		for (j in 1:length(boxes)){
-			tkconfigure(boxes[[j]], state="normal")
-			tkdelete(boxes[[j]],0,"end")
-			for (i in 1:length(variables3)) tkinsert(boxes[[j]], "end", variables3[i])
-			}
-		StrataVarSelect()
-		SizeVarSelect()
-		ssdisable()
-		variabledisable()
-		costdisable()
-		mk.variable()
-		disable.fn(calcsizeValue,sizeBox.d, sizelabel.d)
-		}
-	}
-
-getvars3<-function(){
-		z<-variables[as.numeric(tkcurselection(PSUBox))+1]
-		y<-variables[as.numeric(tkcurselection(strataBox.c))+1]
-		if (length(z)==0) {PSU.variables<-s.variables<-"NA"} else 
-		if (is.na(z)){PSU.variables<-s.variables<-"NA"} else 
-		if (length(y)==0) {PSU.variables<-names(get(z))
-				s.variables<-"NA"} else
-		if (is.na(y)) {PSU.variables<-names(get(z))
-				s.variables<-"NA"} else
-			{PSU.variables<-names(get(z))
-			s.variables<-names(get(y))}
-		b<-list(mkBox, ssBox, ParcostBox, PSUcostBox)
-		for (j in 1:length(b)) {
-			tkconfigure(b[[j]], state="normal")
-			tkdelete(b[[j]],0,"end")
-			if (tclvalue(stratayesno)=="1") {
-				for (i in 1:length(PSU.variables)) tkinsert(b[[j]], "end", PSU.variables[i])}
-			if (tclvalue(stratayesno)=="0") {
-				for (i in 1:length(s.variables)) tkinsert(b[[j]], "end", s.variables[i])}
-			}
-		}
+	boxes2<-list(strataBox.d, mkBox, ssBox, PSUcostBox, ParcostBox)
+	for (j in 1:length(boxes2)) for (i in 1:length(variables2)) tkinsert(boxes2[[j]], "end", variables2[i])
 
 
 # autoSelection between PSU and strata Datasets
 
 StrataVarSelect<-function(){
-	if (length(as.numeric(tkcurselection(PSUBox)))>0 & length(as.numeric(tkcurselection(strataBox.b)))>0 & length(as.numeric(tkcurselection(strataBox.c)))>0) {
-		variables2<-names(get(variables[as.numeric(tkcurselection(PSUBox))+1]))
-		variables3<-names(get(variables[as.numeric(tkcurselection(strataBox.c))+1]))
-		if (length(as.numeric(tkcurselection(strataBox.b))+1)>0) {
-			strata.variable<-variables2[as.numeric(tkcurselection(strataBox.b))+1]
-			strata.selection<-ifelse(is.na(match(strata.variable, variables3)), NA, match(strata.variable,variables3)-1)
-			tkselection.set(strataBox.d, strata.selection)
-			}
+	if (length(as.numeric(tkcurselection(strataBox.b)))>0) {
+		strata.variable<-variables[as.numeric(tkcurselection(strataBox.b))+1]
+		strata.selection<-ifelse(is.na(match(strata.variable, variables2)), NA, match(strata.variable,variables2)-1)
+		tkselection.set(strataBox.d, strata.selection)
 		}
 	}
 
-SizeVarSelect<-function(){
-	if (length(as.numeric(tkcurselection(PSUBox)))>0 & length(as.numeric(tkcurselection(sizeBox.b)))>0 & length(as.numeric(tkcurselection(strataBox.c)))>0) {
-		variables2<-names(get(variables[as.numeric(tkcurselection(PSUBox))+1]))
-		variables3<-names(get(variables[as.numeric(tkcurselection(strataBox.c))+1]))
-		if (tclvalue(stratayesno)==0) {
-			size.variable<-variables2[as.numeric(tkcurselection(sizeBox.b))+1]
-			size.selection<-ifelse(is.na(match(size.variable, variables3)), NA, match(size.variable,variables3)-1)
-			tkselection.set(sizeBox.d, size.selection)
-			}
-		}
-	}
-
-#Bind events to these 4
-	tkbind(PSUBox, "<ButtonRelease-1>", function()getvars())
-	tkbind(strataBox.c, "<ButtonRelease-1>", function()getvars2())
-	tkbind(sizeBox.b, "<ButtonRelease-1>", function()SizeVarSelect())
 	tkbind(strataBox.b, "<ButtonRelease-1>", function()StrataVarSelect())
-
-
-### CALCULATE TOTAL SAMPLE SIZE and FIXED SS ###
-	TotalSSCalc<-function(){
-		df1<-variables[as.numeric(tkcurselection(PSUBox))+1]
-		strata1 <- as.numeric(tkcurselection(strataBox.b))+1
-		if (length(strata1)>0){
-			strata.number<-length(levels(get(df1)[,strata1]))
-			tclvalue(sstotal)<-strata.number*as.numeric(tclvalue(pps3))
-			}
-		}
-
-	FixedSSCalc<-function(){
-		df1<-variables[as.numeric(tkcurselection(PSUBox))+1]
-		strata1 <- as.numeric(tkcurselection(strataBox.b))+1
-		if (length(strata1)>0 & tclvalue(ppsValue)==3){
-			strata.number<-length(levels(get(df1)[,strata1]))
-			tclvalue(pps3)<-round(as.numeric(tclvalue(sstotal))/strata.number)
-			}
-		}
-	tkbind(pps3Field, "<KeyRelease>", function()TotalSSCalc())
-	tkbind(ssField, "<KeyRelease>", function()FixedSSCalc())
-
 
 ### DISABLING ###
 	costdisable<-function(){
 		b<-list(ParcostBox, Parcostlabel, PSUcostBox, PSUcostlabel)
-		if (tclvalue(costValue)==1) setstate(b, "disabled")
-		if (tclvalue(costValue)==0) setstate(b, "normal")
+		if (tclvalue(costValue)==1) setstate2(b, "disabled")
+		if (tclvalue(costValue)==0) setstate2(b, "normal")
 		}
 
 	variabledisable<-function(){
 		a<-list(PSUVBox, PSUVlabel, PSUmeanBox, PSUmeanlabel)
-		if (tclvalue(optimalValue)==0) setstate(a, "normal") 
-		if (tclvalue(optimalValue)==1) setstate(a, "disabled")
+		if (tclvalue(optimalValue)==0) setstate2(a, "normal") 
+		if (tclvalue(optimalValue)==1) setstate2(a, "disabled")
 		}
 
 	psdisable<-function(){
-		if (tclvalue(ppsValue)==1){ tkconfigure(pps2Field, state="disabled")
-			tkconfigure(pps3Field, state="disabled")}
-		if (tclvalue(ppsValue)==2){ tkconfigure(pps2Field, state="normal")
-			tkconfigure(pps3Field, state="disabled")}
-		if (tclvalue(ppsValue)==3){ tkconfigure(pps2Field, state="disabled")
-			tkconfigure(pps3Field, state="normal")
-			FixedSSCalc()}
+		if (tclvalue(ppsValue)==1) tkconfigure(pps2Field, state="disabled")
+		if (tclvalue(ppsValue)==2) tkconfigure(pps2Field, state="normal")
+		if (tclvalue(ppsValue)==3) tkconfigure(pps2Field, state="disabled")
 		}
 
 	ssdisable<-function(){
 		disable.fn(ssValue, ssvarlabel, ssBox)
 		w<-list(sstotallabel, ssField, rbpps1, rbpps2, rbpps3, ppslabel, pps1label, pps2label, 
-			pps3label, pps2Field, pps3Field)
-		if (tclvalue(ssValue)==1) {setstate(w, "normal")
+			pps3label, pps2Field)
+		if (tclvalue(ssValue)==1) {setstate2(w, "normal")
 			psdisable() }
-		if (tclvalue(ssValue)==0) setstate(w, "disabled")		
+		if (tclvalue(ssValue)==0) setstate2(w, "disabled")		
 		}
 
 	mk.variable<-function(){
@@ -472,26 +370,14 @@ SizeVarSelect<-function(){
 			}
 		}
 
-	stratadisable<-function(){
-		getvars3()
-		v<-list(strataBox.c, stratalabel.c, sizeBox.d, sizelabel.d, strataBox.d, stratalabel.d, calcsizeCB)
-		if (tclvalue(stratayesno)=="1") {
-			setstate(v, "disabled")
-			variabledisable()
-			}
-		if (tclvalue(stratayesno)=="0") {
-			setstate(v, "normal")
-			disable.fn(calcsizeValue, sizeBox.d, sizelabel.d)
-			}
-		mk.variable()
-		ssdisable()
-		costdisable()
-		}
+	v<-list(strataBox.d, stratalabel.d)
+	if (stratayesno=="1") setstate2(v, "disabled")
+		
 
 ### Initial disabling ###
 	ssdisable()
 	mk.variable()
-	variabledisable()
+	variabledisable()	
 
 ### ON OK FUNCTION ###
 review.fn<-function(){
@@ -519,9 +405,6 @@ review.fn<-function(){
 		reportname<-tclvalue(reportname)	
 		closeDialog(samplecheck)
 		
-		#first dataset
-		df1<-variables[as.numeric(tkcurselection(PSUBox))+1]
-		
 		#From PSU details
 	 	PSU1 <- as.numeric(tkcurselection(PSUBox.b))+1
 	 	strata1 <- as.numeric(tkcurselection(strataBox.b))+1
@@ -529,22 +412,15 @@ review.fn<-function(){
 		demo1 <- as.numeric(tkcurselection(demoBox))+1
 		demoyesno<-tclvalue(demoValue) # 0 is using demographics, 1 is not using
 
-		#from strata dataset
-		stratayesno <-tclvalue(stratayesno) #0 is yes stratadataset, 1 is create dataset
-		if (stratayesno==0) {df2<-variables[as.numeric(tkcurselection(strataBox.c))+1]} else {df2<-" "}
-
 		#from strata details
 		strata2<-as.numeric(tkcurselection(strataBox.d))+1
-		size2<-as.numeric(tkcurselection(sizeBox.d))+1
-		calcsizevalue<-tclvalue(calcsizeValue) #0 is not calculate from PSU dataset, 1 is calculate
 		mkvar<-as.numeric(tkcurselection(mkBox))+1
 		mkvalue<-tclvalue(mkValue) #0 is strataset contains mk value, 1 is optim
 		ssyesno<-tclvalue(ssValue) # 1 for no sss variable, 0 for sss variable
 		ssvar<-as.numeric(tkcurselection(ssBox))+1
 		sstotal<-as.numeric(tclvalue(sstotal)) #total sample size
-		ppstype<-tclvalue(ppsValue) #1 for PPS, 2 for PPS with min, 3 for fixed
+		ppstype<-tclvalue(ppsValue) #1 for PPS, 2 for PPS with min, 3 for fixed, 4 for neymans
 		nminimum<-as.numeric(tclvalue(pps2))
-		nfixed<-as.numeric(tclvalue(pps3))
 
 		# from opt sampling
 		costyesno<-tclvalue(costValue) #0 is there is cost information, 1 is no information
@@ -561,8 +437,6 @@ review.fn<-function(){
 			tk2notetab.select(nb, nbtab)		
 		}
 
-		if (stratayesno==0 & length(df2)==0) {check.fn("STRATIFICATION DATASET", "Strata Dataset") 
-			return()}
 		if (length(PSU1)==0) {check.fn("PSU", "PSU Details") 
 			return()}
 		if (length(strata1)==0) {check.fn("STRATA", "PSU Details") 
@@ -573,13 +447,13 @@ review.fn<-function(){
 			return()}
 		if (length(strata2)==0 & stratayesno==0) {check.fn("STRATIFICATION", "Strata Details") 
 			return()}
-		if (length(size2)==0 & stratayesno==0 & calcsizevalue==0) {check.fn("SIZE", "Strata Details") 
-			return()}
 		if (length(mkvar)==0 & mkvalue==0) {check.fn("STAGE 1 SAMPLE SIZE", "Strata Details") 
 			return()}
 		if (length(ssvar)==0 & ssyesno==0) {check.fn("STRATA SAMPLE SIZE", "Strata Details") 
 			return()}
 		if (length(PSUV)==0 & optyesno==0) {check.fn("PSU VARIANCE", "Optimal Sampling") 
+			return()}
+		if (length(PSUV)==0 & ppstype==4) {check.fn("PSU VARIANCE", "Optimal Sampling") 
 			return()}
 		if (length(PSUmean)==0 & optyesno==0) {check.fn("PSU MEAN", "Optimal Sampling") 
 			return()}
@@ -602,19 +476,18 @@ review.fn<-function(){
 	### Print out function ###	
 		closeDialog()
 		command<-paste("SampleSizes(df1=",df1, ", df2=",df2,", PSU1=",PSU1,", strata1=",strata1,", size1=",size1,", demo1=",list(demo1),", demoyesno=", demoyesno, 
-		", strata2=",strata2,", size2=",size2,", calcsizevalue=",calcsizevalue, ", stratayesno=", stratayesno,
+		", strata2=",strata2,", stratayesno=", stratayesno,
 		", mkvar=", mkvar,", mkvalue=", mkvalue,", ssyesno=", ssyesno, ", ssvar=", ssvar, ", sstotal=", sstotal, ", ppstype=", ppstype,
-		", nminimum=", nminimum, ", nfixed=", nfixed, ", Parcost=", Parcost, ", PSUcost=",PSUcost,
+		", nminimum=", nminimum, ", Parcost=", Parcost, ", PSUcost=",PSUcost,
 		", PSUV=",PSUV,", PSUmean=", PSUmean, ", optyesno=", optyesno, ", costyesno=", costyesno, ")\n",sep="")
 		samplesizedatasets<-justDoIt(command)
 
        ### Add in report ###
 	if (reportyesno==1) {
 		
-		if (costyesno==0) costtotal<-round(sum(samplesizedatasets$StrataSS$cost))
+		if (costyesno==0) costtotal<-round(sum(samplesizedatasets$StrataSS$ST1_COST))
 		df1names<-names(get(df1))
-		if (stratayesno==0) df2names<-names(get(df2))
-		if (stratayesno==1) df2names<-names(get(df1))
+		df2names<-names(get(df2))
 		
 		cat("Documentation for EHES sampling - Calculating Sample Sizes\n\nDate:",date(),"\nR Version:", paste(getRversion()),"\nRcmdrPlugin.EHESsampling Version: ", packageDescription("RcmdrPlugin.EHESsampling")$Version, "\nWorking Directory:", getwd(),
 		"\n\nDatasets...\nThe dataset containing Primary Sampling Units was called:", df1,
@@ -624,8 +497,6 @@ review.fn<-function(){
 		if (demoyesno==0) c("\nThe second stage stratification (domain) variables were: ", df1names[demo1]),
 		if (demoyesno==1) "\nNo second stage stratification (domain) variables were used",
 		if (stratayesno==0) c("\n\nStratification Dataset Details...\nThe stratitfication variable was: ", df2names[strata2]), 
-		if (stratayesno==0 & calcsizevalue==0) c("\nThe size variable was:", df2names[size2]),
-		if (stratayesno==0 & calcsizevalue==1) "\nThere was no size variable in the stratification dataset",
 		if (mkvalue==0) "\nThe stage 1 sample size variable was called:",
 		if (mkvalue==0) ifelse(stratayesno==0, df2names[mkvar], df1names[mkvar]),
 		if (mkvalue==1) "\nOptimisation of stage 1 sample sizes was selected",
@@ -634,20 +505,21 @@ review.fn<-function(){
 		if (ssyesno==1) c("\nThe dataset did not contain a strata sample size variable"),
 		if (ssyesno==1 & ppstype==1) "\nThe strata sample sizes were selected to be distributed proportional to size",
 		if (ssyesno==1 & ppstype==2) c("\nThe strata sample sizes were selected to be distributed proportional to size with a minumum of: ", nminimum),
-		if (ssyesno==1 & ppstype==3) c("\nThe strata sample sizes were selected to be a fixed size of: ", nfixed),
+		if (ssyesno==1 & ppstype==3) "\nThe strata sample sizes were selected to be a fixed size ",
+		if (ssyesno==1 & ppstype==4) "\nThe strata sample sizes were selected to distributed using Neymans Allocation",
 		if (mkvalue==1 & optyesno==0) c("\nOptimal sample sizes were calculated using the PSU dataset mean and variance variables: ", df1names[PSUmean], df1names[PSUV]),
 		if (costyesno==0) c("\nThe cost was calculated using the variables: ", df2names[PSUcost], df2names[Parcost]),
 		"\n\nAdditional Details...\nThe total sample size was: ", sstotal,
 		if (costyesno==0) c("\nThe total cost came to: ", costtotal),
 		if (optyesno==0 & demoyesno==1) c("\nThe weighted mean for the key variable is estimated as: ", signif(T.Var,digits=4), "\nThe overall variance for the key variable is estimated as: ", signif(TotalVar, digits=4)),
-		if (optyesno==0 & demoyesno==1) c("\nThe CV (as a percentage) for the key variable is estimated as: ", signif(CV, digits=4), "\nThe Design effect is estimated as: ", signif(Deff, digits=4)),
+		if (optyesno==0 & demoyesno==1) c("\nThe Coefficient of Vaiation (as a percentage) for the key variable is estimated as: ", signif(COEF, digits=4), "\nThe Design effect is estimated as: ", signif(Deff, digits=4)),
 		"\n", file=reportname)
 		}
 
 		doItAndPrint(paste("samplesizedatasets<-", command, sep=""))
 		doItAndPrint("StrataSampleSize<-samplesizedatasets$StrataSS")
 		doItAndPrint("PSUSampleSize<-samplesizedatasets$PSUSS\n")
-
+		activeDataSet("PSUSampleSize")
 		View(samplesizedatasets$StrataSS, title="StrataSampleSize")
 		tkfocus(CommanderWindow())
 		}

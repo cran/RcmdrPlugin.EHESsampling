@@ -6,13 +6,13 @@
 \details{\tabular{ll}{
 Package: \tab RcmdrPlugin.EHESsampling\cr
 Type: \tab Package\cr
-Version: \tab 1.1\cr
-Date: \tab 2010-07-14\cr
+Version: \tab 2.0\cr
+Date: \tab 2010-05-18\cr
 License: \tab GPL (>= 2)\cr
 LazyLoad: \tab yes\cr}
 }
 \author{Statistics Norway\cr
-Maintainer: susie.cooper@ssb.no & johan.heldal@ssb.no}
+Maintainer: susie.jentoft@ssb.no & johan.heldal@ssb.no}
 \references{For an indepth manual please email the authors\cr
-EHES manual located publically on the EHES website: www.ehes.info}
+The general EHES manual is located publically on the EHES website: www.ehes.info}
 \keyword{ package }
